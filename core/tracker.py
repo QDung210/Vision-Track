@@ -18,11 +18,22 @@ CROWDED   = "crowded"
 
 
 def _create_cv_tracker(algorithm: str) -> cv2.Tracker:
-    if algorithm == "CSRT":
-        return cv2.TrackerCSRT_create()
-    if algorithm == "KCF":
-        return cv2.TrackerKCF_create()
-    raise ValueError(f"Unsupported algorithm: {algorithm!r}")
+    """Create tracker, trying direct API then legacy (handles different OpenCV builds)."""
+    creators = {
+        "CSRT": ["cv2.TrackerCSRT_create()", "cv2.legacy.TrackerCSRT_create()"],
+        "KCF":  ["cv2.TrackerKCF_create()",  "cv2.legacy.TrackerKCF_create()"],
+    }
+    if algorithm not in creators:
+        raise ValueError(f"Unsupported algorithm: {algorithm!r}")
+    for expr in creators[algorithm]:
+        try:
+            return eval(expr)
+        except AttributeError:
+            continue
+    raise RuntimeError(
+        f"Cannot create {algorithm} tracker. "
+        "Install opencv-contrib-python:  pip install opencv-contrib-python"
+    )
 
 
 class ObjectTracker:

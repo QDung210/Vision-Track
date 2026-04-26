@@ -449,11 +449,17 @@ class VisionTrackApp(ctk.CTk):
         self._badge_var.set(_BADGE_LABELS.get(s, "●"))
         self._badge_lbl.configure(text_color=_BADGE_COLORS.get(s, TEXT_MUTED))
 
-        can_start = s in (_S.READY, _S.DONE)
+        # Start button: label changes contextually so user always knows what to press
+        if s == _S.ROI_SELECT:
+            self._btn_start.configure(text="✓  Confirm ROIs", state="normal")
+        elif s == _S.DONE:
+            self._btn_start.configure(text="↩  Restart", state="normal")
+        else:
+            self._btn_start.configure(text="▶  Start",
+                                      state="normal" if s == _S.READY else "disabled")
+
         can_stop  = s in (_S.TRACKING, _S.ROI_SELECT)
         can_reset = s != _S.IDLE
-
-        self._btn_start.configure(state="normal" if can_start else "disabled")
         self._btn_stop.configure(state="normal"  if can_stop  else "disabled")
         self._btn_reset.configure(state="normal" if can_reset else "disabled")
 
@@ -613,6 +619,9 @@ class VisionTrackApp(ctk.CTk):
     # ── Start / Stop / Reset ─────────────────────────────────────────────────
 
     def _on_start(self) -> None:
+        if self._state == _S.ROI_SELECT:
+            self._roi_confirm()
+            return
         if self._state == _S.DONE:
             # Restart from the same video
             self._engine.clear()
