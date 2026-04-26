@@ -62,24 +62,19 @@ def annotate_frame(
 def draw_roi_preview(
     frame: np.ndarray,
     rois: list[tuple[int, int, int, int]],
-    current: tuple[int, int, int, int] | None = None,
 ) -> np.ndarray:
-    out = frame.copy()
+    out     = frame.copy()
     overlay = out.copy()
 
-    for (x, y, w, h) in rois:
+    for i, (x, y, w, h) in enumerate(rois):
         cv2.rectangle(overlay, (x, y), (x + w, y + h), _BLUE, -1)
         cv2.rectangle(out,     (x, y), (x + w, y + h), _BLUE, 2)
-        cv2.putText(out, f"ROI #{rois.index((x,y,w,h))+1}", (x+4, y+16),
-                    cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255,255,255), 1)
-
-    if current:
-        x, y, w, h = current
-        cv2.rectangle(out, (x, y), (x + w, y + h), (6, 182, 212), 2)
+        cv2.putText(out, f"ROI #{i + 1}", (x + 4, y + 16),
+                    cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 1, cv2.LINE_AA)
 
     cv2.addWeighted(overlay, 0.15, out, 0.85, 0, out)
 
-    guide = "Drag to draw ROI  |  Right-click: undo  |  SPACE: confirm  |  ESC: cancel"
+    guide = "Drag: draw ROI  |  Right-click: undo  |  SPACE: confirm  |  ESC: cancel"
     cv2.putText(out, guide, (10, out.shape[0] - 10),
                 cv2.FONT_HERSHEY_SIMPLEX, 0.45, (180, 180, 255), 1, cv2.LINE_AA)
     return out
